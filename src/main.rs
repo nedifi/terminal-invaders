@@ -18,7 +18,7 @@ use crossterm::terminal::{EnterAlternateScreen, LeaveAlternateScreen};
 use crossterm::{terminal, ExecutableCommand};
 use std::error::Error;
 use std::sync::mpsc::channel;
-use std::time::Duration;
+use std::time::{Duration, Instant};
 use std::{io, thread};
 use terminal_invaders::frame::{new_frame, Drawable, Frame};
 use terminal_invaders::player::Player;
@@ -46,8 +46,11 @@ fn main() -> Result<(), Box<dyn Error>> {
     });
 
     let mut player = Player::new();
+    let mut instant = Instant::now();
 
     'gameloop: loop {
+        let delta = instant.elapsed();
+        instant = Instant::now();
         let mut curr_frame = new_frame();
 
         while event::poll(Duration::default())? {
@@ -55,14 +58,24 @@ fn main() -> Result<(), Box<dyn Error>> {
                 match key_event.code {
                     KeyCode::Left => player.move_left(),
                     KeyCode::Right => player.move_right(),
+                    KeyCode::Down => player.move_down(),
+                    KeyCode::Up => player.move_up(),
+                    KeyCode::Char(' ') | KeyCode::Enter => {
+                        if player.shoot() {
+                            continue;
+                        }
+                    }
                     KeyCode::Esc | KeyCode::Char('q') => {
                         break 'gameloop;
                     }
-                    _ => {}
+                    _ => {
+                        continue;
+                    }
                 }
             }
         }
 
+        player.update(delta);
         player.draw(&mut curr_frame);
         let _ = render_tx.send(curr_frame);
         thread::sleep(Duration::from_millis(1));
