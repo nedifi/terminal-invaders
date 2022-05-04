@@ -71,12 +71,22 @@ fn main() -> Result<(), Box<dyn Error>> {
 
         player.update(delta);
         invaders.update(delta);
+        player.detect_hit(&mut invaders);
+
         let drawables: Vec<&dyn Drawable> = vec![&player, &invaders];
         for drawable in drawables {
             drawable.draw(&mut curr_frame);
         }
         let _ = render_tx.send(curr_frame);
         thread::sleep(Duration::from_millis(1));
+
+        if invaders.all_killed() {
+            break 'gameloop;
+        }
+
+        if invaders.reached_bottom() {
+            break 'gameloop;
+        }
     }
 
     drop(render_tx);

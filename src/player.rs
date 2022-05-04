@@ -17,7 +17,7 @@ use std::time::Duration;
 use crate::{
     frame::{Drawable, Frame},
     shot::Shot,
-    NUM_COLS, NUM_ROWS,
+    NUM_COLS, NUM_ROWS, NUM_SHOTS, invaders::Invaders,
 };
 
 pub struct Player {
@@ -60,7 +60,7 @@ impl Player {
     }
 
     pub fn shoot(&mut self) {
-        if self.shots.len() < 2 {
+        if self.shots.len() <= NUM_SHOTS {
             self.shots.push(Shot::new(self.x, self.y - 1));
         }
     }
@@ -70,6 +70,16 @@ impl Player {
             shot.update(delta);
         }
         self.shots.retain(|shot| !shot.died());
+    }
+
+    pub fn detect_hit(&mut self, invaders: &mut Invaders) {
+        for shot in self.shots.iter_mut() {
+            if !shot.exploding {
+                if invaders.kill_invader_at(shot.x, shot.y) {
+                    shot.explode();
+                }
+            }
+        }
     }
 }
 
