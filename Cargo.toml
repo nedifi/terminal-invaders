@@ -1,5 +1,5 @@
 [package]
-name = "terminal-invaders"
+name = "terminal_invaders"
 version = "0.1.0"
 description = "Terminal game application to pass some time while compiling Rust."
 authors = ["@nedifi <rust@nedi.fi>"]
