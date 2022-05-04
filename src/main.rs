@@ -21,6 +21,7 @@ use std::sync::mpsc::channel;
 use std::time::{Duration, Instant};
 use std::{io, thread};
 use terminal_invaders::frame::{new_frame, Drawable, Frame};
+use terminal_invaders::invaders::Invaders;
 use terminal_invaders::player::Player;
 use terminal_invaders::{frame, render};
 
@@ -47,6 +48,7 @@ fn main() -> Result<(), Box<dyn Error>> {
 
     let mut player = Player::new();
     let mut instant = Instant::now();
+    let mut invaders = Invaders::new();
 
     'gameloop: loop {
         let delta = instant.elapsed();
@@ -60,23 +62,19 @@ fn main() -> Result<(), Box<dyn Error>> {
                     KeyCode::Right => player.move_right(),
                     KeyCode::Down => player.move_down(),
                     KeyCode::Up => player.move_up(),
-                    KeyCode::Char(' ') | KeyCode::Enter => {
-                        if player.shoot() {
-                            continue;
-                        }
-                    }
-                    KeyCode::Esc | KeyCode::Char('q') => {
-                        break 'gameloop;
-                    }
-                    _ => {
-                        continue;
-                    }
+                    KeyCode::Char(' ') | KeyCode::Enter => player.shoot(),
+                    KeyCode::Char('q') | KeyCode::Esc => break 'gameloop,
+                    _ => {}
                 }
             }
         }
 
         player.update(delta);
-        player.draw(&mut curr_frame);
+        invaders.update(delta);
+        let drawables: Vec<&dyn Drawable> = vec![&player, &invaders];
+        for drawable in drawables {
+            drawable.draw(&mut curr_frame);
+        }
         let _ = render_tx.send(curr_frame);
         thread::sleep(Duration::from_millis(1));
     }
