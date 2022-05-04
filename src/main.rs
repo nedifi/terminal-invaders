@@ -16,7 +16,6 @@ use crossterm::cursor::{Hide, Show};
 use crossterm::event::{self, Event, KeyCode};
 use crossterm::terminal::{EnterAlternateScreen, LeaveAlternateScreen};
 use crossterm::{terminal, ExecutableCommand};
-use rusty_audio::Audio;
 use std::error::Error;
 use std::sync::mpsc::channel;
 use std::time::Duration;
@@ -26,9 +25,6 @@ use terminal_invaders::player::Player;
 use terminal_invaders::{frame, render};
 
 fn main() -> Result<(), Box<dyn Error>> {
-    let mut audio = init_audio();
-    audio.play("startup");
-
     let mut stdout = io::stdout();
     terminal::enable_raw_mode()?;
     stdout.execute(EnterAlternateScreen)?;
@@ -39,10 +35,10 @@ fn main() -> Result<(), Box<dyn Error>> {
         let mut last_frame = frame::new_frame();
         let mut stdout = io::stdout();
         render::render(&mut stdout, &last_frame, &last_frame, true);
-        loop {
+        'renderloop: loop {
             let curr_frame = match render_rx.recv() {
                 Ok(x) => x,
-                Err(_) => break,
+                Err(_) => break 'renderloop,
             };
             render::render(&mut stdout, &last_frame, &curr_frame, false);
             last_frame = curr_frame;
@@ -60,7 +56,6 @@ fn main() -> Result<(), Box<dyn Error>> {
                     KeyCode::Left => player.move_left(),
                     KeyCode::Right => player.move_right(),
                     KeyCode::Esc | KeyCode::Char('q') => {
-                        audio.play("lose");
                         break 'gameloop;
                     }
                     _ => {}
@@ -77,20 +72,8 @@ fn main() -> Result<(), Box<dyn Error>> {
     render_handle
         .join()
         .expect("The render thread should be done by now.");
-    audio.wait();
     stdout.execute(Show)?;
     stdout.execute(LeaveAlternateScreen)?;
     terminal::disable_raw_mode()?;
     Ok(())
-}
-
-fn init_audio() -> Audio {
-    let mut audio = Audio::new();
-    audio.add("explode", "snd/explode.wav");
-    audio.add("lose", "snd/lose.wav");
-    audio.add("move", "snd/move.wav");
-    audio.add("pew", "snd/pew.wav");
-    audio.add("startup", "snd/startup.wav");
-    audio.add("win", "snd/win.wav");
-    return audio;
 }
