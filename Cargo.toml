@@ -1,0 +1,12 @@
+[package]
+name = "terminal-invaders"
+version = "0.1.0"
+description = "Terminal game application to pass some time while compiling Rust."
+authors = ["@nedifi <rust@nedi.fi>"]
+license = "Apache-2.0"
+edition = "2021"
+
+[dependencies]
+crossterm = "0.23"
+rusty_audio = "1.2"
+rusty_time = "0.11"
