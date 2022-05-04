@@ -21,7 +21,8 @@ use std::error::Error;
 use std::sync::mpsc::channel;
 use std::time::Duration;
 use std::{io, thread};
-use terminal_invaders::frame::{new_frame, Frame};
+use terminal_invaders::frame::{new_frame, Drawable, Frame};
+use terminal_invaders::player::Player;
 use terminal_invaders::{frame, render};
 
 fn main() -> Result<(), Box<dyn Error>> {
@@ -48,12 +49,16 @@ fn main() -> Result<(), Box<dyn Error>> {
         }
     });
 
+    let mut player = Player::new();
+
     'gameloop: loop {
-        let curr_frame = new_frame();
+        let mut curr_frame = new_frame();
 
         while event::poll(Duration::default())? {
             if let Event::Key(key_event) = event::read()? {
                 match key_event.code {
+                    KeyCode::Left => player.move_left(),
+                    KeyCode::Right => player.move_right(),
                     KeyCode::Esc | KeyCode::Char('q') => {
                         audio.play("lose");
                         break 'gameloop;
@@ -63,6 +68,7 @@ fn main() -> Result<(), Box<dyn Error>> {
             }
         }
 
+        player.draw(&mut curr_frame);
         let _ = render_tx.send(curr_frame);
         thread::sleep(Duration::from_millis(1));
     }
