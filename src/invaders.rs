@@ -16,31 +16,36 @@ use std::{cmp::max, time::Duration};
 
 use rusty_time::prelude::Timer;
 
-use crate::{
-    frame::{Drawable, Frame},
-    NUM_COLS, NUM_ROWS,
-};
+use crate::frame::{Drawable, Frame};
 
+// Provides an invader struct with coordinates.
 pub struct Invader {
-    x: usize,
-    y: usize,
+    x: u16,
+    y: u16,
 }
 
+// Provides an invaders struct for an entire army.
 pub struct Invaders {
     pub army: Vec<Invader>,
     move_timer: Timer,
     direction: i32,
+    bounds: Vec<u16>,
 }
 
+// Implements the invaders army.
 impl Invaders {
-    pub fn new() -> Self {
+
+    // Creates a new invaders army within the given dimensions.
+    pub fn new(dimensions: &Vec<u16>) -> Self {
+
+        // Creates the army.
         let mut army = Vec::new();
-        for x in 0..NUM_COLS {
-            for y in 0..NUM_ROWS {
+        for x in 0..dimensions[0] {
+            for y in 0..dimensions[1] {
                 if (x > 1)
-                    && (x < NUM_COLS - 2)
+                    && (x < dimensions[0] - 2)
                     && (y > 0)
-                    && (y < NUM_ROWS / 2 - 2)
+                    && (y < dimensions[1] / 2 - 2)
                     && (x % 2 == 0)
                     && (y % 2 == 0)
                 {
@@ -50,16 +55,28 @@ impl Invaders {
         }
         Self {
             army,
+
+            // The army changes position every 2 seconds.
             move_timer: Timer::from_millis(2000),
+
+            // The army moves in different directions.
             direction: 1,
+
+            // The army's boundaries.
+            bounds: dimensions.clone(),
         }
     }
 
+    // Updates the army positions.
     pub fn update(&mut self, delta: Duration) {
         self.move_timer.update(delta);
+
+        // Only move if timer is ready.
         if self.move_timer.ready {
             self.move_timer.reset();
             let mut downwards = false;
+
+            // Determines wether it's time to move downwards.
             if self.direction == -1 {
                 let min_x = self.army.iter().map(|invader| invader.x).min().unwrap_or(0);
                 if min_x == 0 {
@@ -68,11 +85,13 @@ impl Invaders {
                 }
             } else {
                 let max_x = self.army.iter().map(|invader| invader.x).max().unwrap_or(0);
-                if max_x == NUM_COLS - 1 {
+                if max_x == self.bounds[0] - 1 {
                     self.direction = -1;
                     downwards = true;
                 }
             }
+
+            // Moves downwards.
             if downwards {
                 let new_duration = max(self.move_timer.duration.as_millis() - 250, 250);
                 self.move_timer = Timer::from_millis(new_duration as u64);
@@ -81,21 +100,24 @@ impl Invaders {
                 }
             } else {
                 for invader in self.army.iter_mut() {
-                    invader.x = ((invader.x as i32) + self.direction) as usize;
+                    invader.x = ((invader.x as i32) + self.direction) as u16;
                 }
             }
         }
     }
 
+    // Determines whether all invaders were killed.
     pub fn all_killed(&self) -> bool {
         self.army.is_empty()
     }
 
+    // Determines whether the invaders reached the bottom.
     pub fn reached_bottom(&self) -> bool {
-        self.army.iter().map(|invader| invader.y).max().unwrap_or(0) >= NUM_ROWS - 1
+        self.army.iter().map(|invader| invader.y).max().unwrap_or(0) >= self.bounds[1] - 1
     }
 
-    pub fn kill_invader_at(&mut self, x: usize, y: usize) -> bool {
+    // Kills an invader at the given position.
+    pub fn kill_invader_at(&mut self, x: u16, y: u16) -> bool {
         if let Some(idx) = self
             .army
             .iter()
@@ -109,17 +131,23 @@ impl Invaders {
     }
 }
 
+// Implements the drawable trait for the invaders army.
 impl Drawable for Invaders {
+
+    // Draws the invaders on a given frame.
     fn draw(&self, frame: &mut Frame) {
         for invader in self.army.iter() {
-            frame[invader.x][invader.y] = if (self.move_timer.time_left.as_secs_f32()
-                / self.move_timer.duration.as_secs_f32())
-                > 0.5
-            {
-                "■"
-            } else {
-                "□"
-            }
+
+            // Allows invaders to change appearance.
+            frame[invader.x as usize][invader.y as usize] =
+                if (self.move_timer.time_left.as_secs_f32()
+                    / self.move_timer.duration.as_secs_f32())
+                    > 0.5
+                {
+                    "■".to_string()
+                } else {
+                    "□".to_string()
+                }
         }
     }
 }

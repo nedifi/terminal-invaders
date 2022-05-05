@@ -22,11 +22,13 @@ use crossterm::{
 };
 use std::io::Stdout;
 
+// Renders the current frame over the last frame.
 pub fn render(stdout: &mut Stdout, last_frame: &Frame, curr_frame: &Frame, force: bool) {
+    // Forces the entire frame canvas to reset.
     if force {
         stdout
-            .queue(SetBackgroundColor(Color::Blue))
-            .expect("Background color should be set to blue!");
+            .queue(SetBackgroundColor(Color::Grey))
+            .expect("Background color should be set to grey!");
         stdout
             .queue(Clear(ClearType::All))
             .expect("It should clear the entire STDOUT.");
@@ -34,17 +36,21 @@ pub fn render(stdout: &mut Stdout, last_frame: &Frame, curr_frame: &Frame, force
             .queue(SetBackgroundColor(Color::Black))
             .expect("Background color should be set to black!");
     }
+
+    // Iterates all colums over x coordinates.
     for (x, col) in curr_frame.iter().enumerate() {
+        // Iterates all characters of y coordinates.
         for (y, s) in col.iter().enumerate() {
+            // Moves the queue to the requested position of x, y.
             stdout.queue(MoveTo(x as u16, y as u16)).expect(&format!(
                 "It shoud move to the position {}, {}.",
                 x.to_string(),
                 y.to_string()
             ));
+
+            // Updates the frame if the character changed.
             if *s != last_frame[x][y] || force {
                 print!("{}", s);
-            } else {
-                print!("{}", last_frame[x][y]);
             }
         }
     }
