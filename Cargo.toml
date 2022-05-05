@@ -1,7 +1,7 @@
 [package]
 name = "terminal_invaders"
 version = "0.1.0"
-description = "Terminal game application to pass some time while compiling Rust."
+description = "Terminal-game application to pass some time while compiling Rust."
 authors = ["@nedifi <rust@nedi.fi>"]
 license = "Apache-2.0"
 edition = "2021"

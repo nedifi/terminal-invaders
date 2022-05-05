@@ -31,7 +31,7 @@ use terminal_invaders::{frame, render};
 fn main() -> Result<(), Box<dyn Error>> {
     // Allows to specify a debug mode.
     let args = Command::new("terminal_invaders")
-        .about("Terminal game application to pass some time while compiling Rust.")
+        .about("Terminal-game application to pass some time while compiling Rust.")
         .version("0.1.0")
         .author("@nedifi <rust@nedi.fi>")
         .arg(
